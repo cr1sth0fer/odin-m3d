@@ -1,6 +1,32 @@
 
 package m3d
 
+import "core:c"
+import "core:mem"
+
+allocator: mem.Allocator
+
+@(export)
+m3d_allocator_malloc :: proc "c" (size: c.size_t) -> rawptr {
+    context = {}
+    data, _ := mem.alloc(int(size), allocator = allocator)
+    return data
+}
+
+@(export)
+m3d_allocator_realloc :: proc "c" (old_pointer: rawptr, new_size: c.size_t) -> rawptr {
+    context = {}
+    info := mem.query_info(old_pointer, allocator)
+    data, _ := mem.resize(old_pointer, info.size.(int), int(new_size), allocator = allocator)
+    return data
+}
+
+@(export)
+m3d_allocator_free :: proc "c" (old_pointer: rawptr) {
+    context = {}
+    mem.free(old_pointer, allocator = allocator)
+}
+
 APIVERSION :: 0x0100
 
 DOUBLE :: #config(M3D_DOUBLE, false)
@@ -47,7 +73,7 @@ hdr_t :: struct #packed
 {
     magic: [4]u8,
     length: u32,
-    scale: f32, /* deliberately not M3D_FLOAT */
+    scale: f32,    /* deliberately not m3d.FLOAT */
     types: u32,
 }
 
@@ -557,7 +583,7 @@ when ODIN_OS == .Windows && ODIN_ARCH == .amd64
 foreign m3d
 {
     @(link_name="m3d_load")
-    load :: proc(data: [^]u8, readfilecb: read_t, freecb: free_t, mtllib: ^m3d_t) -> ^m3d_t ---
+    _load :: proc(data: [^]u8, readfilecb: read_t, freecb: free_t, mtllib: ^m3d_t) -> ^m3d_t ---
 
     @(link_name="m3d_save")
     save :: proc(model: ^m3d_t, quality, flags: i32, size: ^u32) -> [^]u8 ---
@@ -576,3 +602,7 @@ foreign m3d
     @(link_name="_m3d_safestr")
     _m3d_safestr :: proc(in_: cstring, morelines: i32) -> cstring ---
 }
+
+// load :: proc(data: [^]u8, readfilecb: read_t, freecb: free_t, mtllib: ^m3d_t, allocator := context.allocator) -> ^m3d_t
+// {
+// }
