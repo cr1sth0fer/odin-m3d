@@ -1,6 +1,10 @@
 @echo off
 
-clang -c m3d.c -std=c99 -o m3d.obj -O2
-llvm-lib m3d.obj
+clang-cl /c /O2 m3d.c
+llvm-lib /OUT:m3d_windows_amd64_release.lib m3d.obj
 del m3d.obj
-move m3d.lib m3d_windows_amd64.lib
+
+clang-cl /c /Zi /Fd:m3d_windows_amd64_debug.pdb m3d.c
+llvm-lib /OUT:m3d_windows_amd64_debug.lib m3d.obj
+del m3d.obj
+

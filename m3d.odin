@@ -4,6 +4,7 @@ package m3d
 import "core:c"
 import "core:mem"
 
+// This allocator needs to operate like mem.Compat_Allocator
 allocator: mem.Allocator
 
 @(export)
@@ -16,8 +17,7 @@ m3d_allocator_malloc :: proc "c" (size: c.size_t) -> rawptr {
 @(export)
 m3d_allocator_realloc :: proc "c" (old_pointer: rawptr, new_size: c.size_t) -> rawptr {
     context = {}
-    info := mem.query_info(old_pointer, allocator)
-    data, _ := mem.resize(old_pointer, info.size.(int), int(new_size), allocator = allocator)
+    data, _ := mem.resize(old_pointer, 0, int(new_size), allocator = allocator)
     return data
 }
 
@@ -574,9 +574,12 @@ txsc_t :: #type proc "c" (name: cstring, script: rawptr, len: u32, output: ^tx_t
 /* interpret surface script */
 prsc_t :: #type proc "c" (name: cstring, script: rawptr, len: u32, model: ^m3d_t) -> i32
 
-when ODIN_OS == .Windows && ODIN_ARCH == .amd64
-{
-    foreign import m3d "m3d_windows_amd64.lib"
+when ODIN_OS == .Windows && ODIN_ARCH == .amd64 {
+    when ODIN_DEBUG {
+        foreign import m3d "m3d_windows_amd64_debug.lib"
+    } else {
+        foreign import m3d "m3d_windows_amd64_release.lib"
+    }
 }
 
 @(default_calling_convention="c")
