@@ -4,9 +4,11 @@ extern void* m3d_allocator_malloc(size_t size);
 extern void* m3d_allocator_realloc(void* old_pointer, size_t new_size);
 extern void m3d_allocator_free(void* old_pointer);
 
+#ifndef ASSERTIONS
 #define M3D_MALLOC  m3d_allocator_malloc
 #define M3D_REALLOC m3d_allocator_realloc
 #define M3D_FREE    m3d_allocator_free
+#endif
 
 #define M3D_IMPLEMENTATION
 #include "m3d.h"
